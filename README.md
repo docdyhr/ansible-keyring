@@ -51,7 +51,7 @@ NB! community.general can also be installed as part of requirements.txt in local
 Check keyring doc's
 
 ```cli
-ansible-galaxy collection install community.general -p [Your]
+ansible-doc -t lookup keyring
 ```
 
 ### Ressources:
