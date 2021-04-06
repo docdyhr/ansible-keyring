@@ -2,8 +2,8 @@
 
 import keyring
 
-LABEL = "banna"
-ACCOUNT_NAME = "monkeybiz"
+LABEL = "test"
+ACCOUNT_NAME = "test"
 
 PASSWD = keyring.get_password(LABEL, ACCOUNT_NAME)
 
