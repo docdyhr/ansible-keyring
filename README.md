@@ -1,6 +1,6 @@
 # ansible-keyring
 
-Access ansible passwords securely from keyring / Mac keychain 
+Access ansible passwords securely from keyring / Mac keychain without ressorting to [ansible-vault](https://docs.ansible.com/ansible/latest/cli/ansible-vault.html).
 
 ## prerequisites
 
@@ -20,7 +20,6 @@ keyring set [system] [username]
 
 Add ansible password and check that it works.
 
-
 ```cli
 keyring get [system] [username]
 ```
@@ -32,10 +31,13 @@ The keyring plugin allows you to access data stored in the OS provided keyring/k
 Collection Path. By default the community collection is installed in ***~/.ansible/collections/*** folder on macOS.
 
 Check install path:
+
 ```cli
 ansible-config dump | grep COLLECTIONS_PATHS
 ```
+
 Costum Path:
+
 ```cli
 ansible-galaxy collection install community.general -p [Your_Costum_Path]
 ```
@@ -54,11 +56,11 @@ Check keyring doc's
 ansible-doc -t lookup keyring
 ```
 
-### Ressources:
+### Ressources
 
 [Docs Community.General](https://docs.ansible.com/ansible/latest/collections/community/general/)
 
-### Problems:
+### Problems
 
 Ansible apparently cannot reference the python library with 'import keyring' from inside community.general.keyring. It seems that ansible has problems with python libraries installed outside of the ansible contest. Maybee it has to be installed using requirements.txt to work!?
 
