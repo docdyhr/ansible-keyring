@@ -50,6 +50,13 @@ ansible-galaxy collection install community.general
 
 NB! community.general can also be installed as part of requirements.txt in local .env folder.
 
+community.general can be accessed in a yaml files like this:
+
+```yaml
+collections:
+    - community.general
+```
+
 Check keyring doc's
 
 ```cli
