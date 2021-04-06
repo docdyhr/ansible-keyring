@@ -72,7 +72,7 @@ ansible-doc -t lookup keyring
 ***TASK [test of keyring plugin]
 fatal: [localhost]: FAILED! => {"msg": "Can't LOOKUP(keyring): missing required python library 'keyring'"}***
 
-Ansible apparently cannot reference the python library with 'import keyring' from inside community.general.keyring. It seems that ansible has problems with python libraries installed outside of the ansible contest. Maybe it has to be installed using requirements.txt to work!?
+Keyring is correctly installed, but ansible apparently cannot reference the python keyring library with 'import keyring' from inside community.general.keyring. It seems that ansible has problems with python libraries installed outside of the ansible context. Maybe community.general has to be installed using requirements.txt together with pip env in order to work!?
 
 ## A simple solution without using community.general.keyring
 
