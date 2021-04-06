@@ -63,6 +63,20 @@ Check keyring doc's
 ansible-doc -t lookup keyring
 ```
 
+community.general.keyring examples:
+
+```yaml
+- name : output secrets to screen (BAD IDEA)
+  ansible.builtin.debug:
+    msg: "Password: {{item}}"
+  with_community.general.keyring:
+    - 'servicename username'
+```
+
+```yaml
+ansible_become_pass=={{ lookup('community.general.keyring','test test') }}
+```
+
 ### Ressources
 
 [Docs Community.General](https://docs.ansible.com/ansible/latest/collections/community/general/)
@@ -100,8 +114,12 @@ ansible-playbook playbook_pipe.yml
 
 Afterwards you use this with 'ansible_become_pass' in an inventory / host file or any other yaml file like this:
 
-```cli
+```yaml
 ansible_become_pass="{{ lookup('pipe', './get_pass.py') }}"
 ```
 
 **NB!** It's recommended to put any password files / scripts outside the current folder for security reasons - example path: ***~/.ansible***
+
+## References
+
+[Encrypting content with Ansible Vault](http://docs.ansible.com/ansible/2.10/user_guide/vault.html)
