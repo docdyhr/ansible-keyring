@@ -1,2 +1,3 @@
 [control]
 localhost ansible_connection=local
+# interpreter_python = /usr/local/bin/python3
