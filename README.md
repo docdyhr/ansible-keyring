@@ -1,6 +1,6 @@
 # ansible-keyring
 
-Access ansible passwords securely from keyring / Mac keychain without ressorting to [ansible-vault](https://docs.ansible.com/ansible/latest/cli/ansible-vault.html).
+Access ansible passwords securely with keyring from Mac keychain.
 
 ## prerequisites
 
@@ -206,5 +206,6 @@ ansible-playbook --vault-id test@contrib/vault/vault-keyring-client.py playbook_
 
 ## References
 
+[ansible-vault](https://docs.ansible.com/ansible/latest/cli/ansible-vault.html)  
 [ansible-tools](https://github.com/lvillani/ansible-tools)  
 [Encrypting content with Ansible Vault](http://docs.ansible.com/ansible/2.10/user_guide/vault.html)
