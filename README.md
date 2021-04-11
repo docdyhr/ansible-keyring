@@ -48,6 +48,12 @@ Install from terminal:
 ansible-galaxy collection install community.general
 ```
 
+Verify your community.general installation:
+
+```cli
+ansible-galaxy collection verify community.general -vvv
+```
+
 NB! community.general can also be installed as part of requirements.txt in local .env folder.
 
 community.general can be accessed in a yaml files like this:
@@ -91,9 +97,9 @@ Even when keyring is correctly installed ansible cannot reference the python key
 Different python paths did not work:
 
 ```cli
-ANSIBLE_PYTHON_INTERPRETER=/usr/local/bin/python3 ansible-playbook playbook_passwd.yml
+ANSIBLE_PYTHON_INTERPRETER=/usr/local/bin/python3 ansible-playbook playbook_keyring.yml
 
-ANSIBLE_PYTHON_INTERPRETER=/usr/bin/python3 ansible-playbook playbook_passwd.yml
+ANSIBLE_PYTHON_INTERPRETER=/usr/bin/python3 ansible-playbook playbook_keyring.yml
 ```
 
 ## A simple solution without using community.general.keyring
@@ -170,9 +176,20 @@ playbook_vault.yml
 ```cli
 ansible-vault encrypt vars/api_key.yml
 ```
+
 Password: test
 
-Test vault password:
+Test ansible-vault:
+
+```cli
+ansible-vault view vars/api_key.yml
+```
+
+```cli
+ansible-vault view vars/api_key.yml --vault-password-file get_pass.py
+```
+
+Test ansible-playbook:
 
 ```cli
 ansible-playbook playbook_vault.yml --ask-vault-pass
@@ -184,7 +201,7 @@ ansible-playbook playbook_vault.yml --vault-password-file get_pass.py
 
 --vault-id examples:
 
-Test vault-keyring-client.py:
+Test community.general python script: vault-keyring-client.py.
 
 ```cli
 python3 vault-keyring-client.py --vault-id test  --username test
@@ -192,8 +209,16 @@ python3 vault-keyring-client.py --vault-id test  --username test
 
 Result: test
 
+ansible-playbooks with --vault-id:
+
 ```cli
 ansible-playbook --vault-id get_pass.py playbook_vault.yml
+```
+
+vault-keyring with credidentials set in ansible.cfg [vault]:
+
+```cli
+ansible-playbook --vault-id vault-keyring.py playbook_vault.yml
 ```
 
 ```cli
@@ -209,3 +234,4 @@ ansible-playbook --vault-id test@contrib/vault/vault-keyring-client.py playbook_
 [ansible-vault](https://docs.ansible.com/ansible/latest/cli/ansible-vault.html)  
 [ansible-tools](https://github.com/lvillani/ansible-tools)  
 [Encrypting content with Ansible Vault](http://docs.ansible.com/ansible/2.10/user_guide/vault.html)
+[vault-keyring-client](https://github.com/ansible-collections/community.general/blob/main/scripts/vault/vault-keyring-client.py)
