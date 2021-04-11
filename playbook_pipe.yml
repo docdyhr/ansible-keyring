@@ -8,6 +8,7 @@
   tasks:
     - name: raw result of running date command"
       debug:
-        msg: "{{ lookup('pipe', './get_pass.sh') }}"
+        # msg: "{{ lookup('pipe', './get_pass.sh') }}"
         # msg: "{{ lookup('pipe', './get_pass.py') }}"
+        msg: "{{ lookup('pipe', './vault-keyring.py get') }}"
 ...

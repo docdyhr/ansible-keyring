@@ -111,7 +111,7 @@ keyring set test test
 keyring get test test
 ```
 
-Use get_pass.sh with macOS 'security' or get_pass.py with keyring to retrieve a password.
+Use get_pass.sh with macOS 'security' cli tool or get_pass.py with keyring to retrieve a password.
 
 Remember to chmod scripts:
 
@@ -132,7 +132,7 @@ Afterwards you use this with 'ansible_become_pass' in an inventory / host file o
 ansible_become_pass="{{ lookup('pipe', './get_pass.py') }}"
 ```
 
-## Using ansible-vault vault-keyring-client.py with keychain
+## Using ansible-vault vault-keyring.py and vault-keyring-client.py with macOS Keyring / keychain
 
 This is a new type of vault-password script  (a 'client') that takes advantage of and enhances the multiple vault password support.
 
@@ -158,71 +158,116 @@ That will cause the 'contrib/vault/vault-keyring-client.py' script to be invoked
      contrib/vault/vault-keyring-client.py --vault-id my_vault_id
 ```
 
-The previous vault-keyring.py password script was extended to become vault-keyring-client.py. It uses
-the python 'keyring' module to request secrets from various backends. The plain 'vault-keyring.py' script
-would determine which key id and keyring name to use based on values that had to be set in ansible.cfg.
-So it was also limited to one keyring name.
+The previous vault-keyring.py password script was extended to become vault-keyring-client.py. It uses the python 'keyring' module to request secrets from various backends. The plain 'vault-keyring.py' script
+would determine which key id and keyring name to use based on values that had to be set in ansible.cfg. So it was also limited to one keyring name.
 
 The new vault-keyring-client.py will request the secret for the vault id provided via the '--vault-id' option.
 The script can be used without config and can be used for multiple keyring ids (and keyrings).
 
 On success, a vault password client script will print the password to stdout and exit with a return code of 0.
-If the 'client' script can't find a secret for the --vault-id, the script will exit with return code of 2 and print an error to stderr.
+If the 'client' script can't find a secret for the --vault-id, the script will exit with return code of 2 and print an error to stderr.  
 
-Files:  
+### Files
+
+playbook_pipe.yml  
 playbook_vault.yml  
 /vars/api_key.yml
+vault-keyring.py
+vault-keyring-client.py
+
+### Initilise scripts
+
+The original ansible-vault scripts are found in community.general scripts/vault folder (ie. ~/.ansible/collections/ansible_collections/community/general/scripts/vault/)
+
+Copy vault-keyring.py and vault-keyring-client.py to your project or your ansible folder outside source control (~/.ansible/).
+
+Change the python shebang line in vault-keyring.py and vault-keyring-client.py to reflect your python 3 path (#!/usr/bin/env python3).
+
+### Save scripts with the executable bit set:
+
+```cli
+chmod +x vault-keyring.py vault-keyring-client.py
+```
+
+### Setup password with vault-keyring.py with the creditals in ansible.cfg
+
+```cli
+[defaults]
+vault_password_file = vault-keyring.py
+
+[vault]
+keyname = ansible_key_test
+username = test_user
+```
+
+```cli
+./vault-keyring.py set
+```
+
+or
+
+### Setup password with vault-keyring-client.py
+
+```cli
+./vault-keyring-client.py --vault-id 'ansible_key_test'  --username 'test_user' --set
+```
+
+### Test set password with vault-keyring.py (default option = get)
+
+```cli
+./vault-keyring.py
+```
+
+### Test set password with vault-keyring-client.py
+
+```cli
+./vault-keyring-client.py --vault-id 'ansible_key_test'  --username 'test_user'
+```
+
+### Encrypt vars with set password
 
 ```cli
 ansible-vault encrypt vars/api_key.yml
 ```
 
-Password: test
+### Test ansible-vault with vault-keyring.py
 
-Test ansible-vault:
+vault-keyring.py is automaticly used when defined in ansible.cfp
+
+```cli
+ansible-vault view vars/api_key.yml --vault-password-file vault-keyring.py
+```
 
 ```cli
 ansible-vault view vars/api_key.yml
 ```
 
-```cli
-ansible-vault view vars/api_key.yml --vault-password-file get_pass.py
-```
-
-Test ansible-playbook:
+### Test ansible-vault with vault-keyring-client.py
 
 ```cli
-ansible-playbook playbook_vault.yml --ask-vault-pass
+ansible-vault view vars/api_key.yml --vault-id ansible_key_test@vault-keyring-client.py
 ```
+
+### Use with ansible-playbook with vault-keyring.py
 
 ```cli
-ansible-playbook playbook_vault.yml --vault-password-file get_pass.py
+ansible-playbook playbook_vault.yml --vault-password-file vault-keyring.py
 ```
-
---vault-id examples:
-
-Test community.general python script: vault-keyring-client.py.
-
-```cli
-python3 vault-keyring-client.py --vault-id test  --username test
-```
-
-Result: test
-
-ansible-playbooks with --vault-id:
-
-```cli
-ansible-playbook --vault-id get_pass.py playbook_vault.yml
-```
-
-vault-keyring with credidentials set in ansible.cfg [vault]:
 
 ```cli
 ansible-playbook --vault-id vault-keyring.py playbook_vault.yml
 ```
 
+vault-keyring.py is automaticly used when defined in ansible.cfp so this will also work:
+
 ```cli
-ansible-playbook --vault-id test@contrib/vault/vault-keyring-client.py playbook_vault.yml
+ansible-playbook playbook_vault.yml
+```
+
+### Use with ansible-playbook with vault-keyring-client.py
+
+```cli
+ansible-playbook --vault-id ansible_key_test@vault-keyring-client.py playbook_vault.yml
 ```
 
 ## Notes

@@ -1,8 +1,8 @@
 --- # example from Jeff Geerling DevOps book
-- name: test ansible-vault with keychain
+- name: test ansible-vault with keyring / macOS keychain
   hosts:  localhost
   connection: local
-  gather_facts: no
+  gather_facts: False
 
   vars_files:
     - vars/api_key.yml
@@ -16,4 +16,5 @@
   
   - name: Show the result.
     debug: var=echo_result.stdout
+
 ...

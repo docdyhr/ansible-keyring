@@ -1,0 +1,11 @@
+1) get community.general.keyring to work
+problem:
+TASK [test of keyring plugin] fatal: [localhost]: FAILED! => {"msg": "Can't LOOKUP(keyring): missing required python library 'keyring'"}
+
+Possible solutions:
+ python path
+ executable bit ie chmod +x
+ cp python file to project folder
+
+2) get vault-keyring-client.py to work
+  problem: cannot see username in ansible.cfg
