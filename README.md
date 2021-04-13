@@ -183,7 +183,7 @@ Copy vault-keyring.py and vault-keyring-client.py to your project or your ansibl
 
 Change the python shebang line in vault-keyring.py and vault-keyring-client.py to reflect your python 3 path (#!/usr/bin/env python3).
 
-### Save scripts with the executable bit set:
+### Save scripts with the executable bit set
 
 ```cli
 chmod +x vault-keyring.py vault-keyring-client.py
@@ -238,6 +238,8 @@ vault-keyring.py is automaticly used when defined in ansible.cfp
 ansible-vault view vars/api_key.yml --vault-password-file vault-keyring.py
 ```
 
+The below will also work as ansible-vault will automaticly detect and decrypt the vars/api_key.yml file with vault-keyring.py
+
 ```cli
 ansible-vault view vars/api_key.yml
 ```
@@ -247,6 +249,8 @@ ansible-vault view vars/api_key.yml
 ```cli
 ansible-vault view vars/api_key.yml --vault-id ansible_key_test@vault-keyring-client.py
 ```
+
+***ToDo:*** Somehow ansible-vault with vault-keyring-client.py cannot see the test_user in ansible.cfg but uses the current system $USER!?
 
 ### Use with ansible-playbook with vault-keyring.py
 
@@ -258,7 +262,7 @@ ansible-playbook playbook_vault.yml --vault-password-file vault-keyring.py
 ansible-playbook --vault-id vault-keyring.py playbook_vault.yml
 ```
 
-vault-keyring.py is automaticly used when defined in ansible.cfp so this will also work:
+vault-keyring.py is automaticly detected and used when the credentials is defined in ansible.cfg, so this will also work:
 
 ```cli
 ansible-playbook playbook_vault.yml
@@ -270,6 +274,11 @@ ansible-playbook playbook_vault.yml
 ansible-playbook --vault-id ansible_key_test@vault-keyring-client.py playbook_vault.yml
 ```
 
+ToDo: Somehow ansible-playbook used with vault-keyring-client.py cannot see the test_user in ansible.cfg but uses the current system $USER!?
+
+Reproduces the same error as above:
+**ERROR! Vault password client script ~/.ansible/vault-keyring-client.py did not find a secret for vault-id=ansible_key_test: b'vault-keyring-client could not find key="ansible_key_test" for user="$USER" via backend="macOS Keyring"\n'**
+
 ## Notes
 
 **NB!** It's recommended to put any password files / scripts outside the current folder for security reasons - example path: ***~/.ansible***
@@ -277,6 +286,16 @@ ansible-playbook --vault-id ansible_key_test@vault-keyring-client.py playbook_va
 ## References
 
 [ansible-vault](https://docs.ansible.com/ansible/latest/cli/ansible-vault.html)  
+[Encrypting content with Ansible Vault](http://docs.ansible.com/ansible/2.10/user_guide/vault.html)  
+[community.general/scripts/vault](https://github.com/ansible-collections/community.general/blob/main/scripts/vault/)
+
+## Similar projects
+
+[ansible-autosetup](https://github.com/laurent-kling/ansible-autosetup)  
+[vaultkeychain](https://github.com/gitinsky/vaultkeychain)  
+[vault-unseal](https://github.com/covermymeds/vault_unseal)  
+
 [ansible-tools](https://github.com/lvillani/ansible-tools)  
-[Encrypting content with Ansible Vault](http://docs.ansible.com/ansible/2.10/user_guide/vault.html)
-[vault-keyring-client](https://github.com/ansible-collections/community.general/blob/main/scripts/vault/vault-keyring-client.py)
+
+[VSCode ansible-vault extension](https://github.com/dhoeric/vscode-ansible-vault)  
+[Ansible Modules Hashivault](https://github.com/TerryHowe/ansible-modules-hashivault)
