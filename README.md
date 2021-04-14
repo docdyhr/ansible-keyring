@@ -276,16 +276,13 @@ ansible-playbook --vault-id ansible_key_test@vault-keyring-client.py playbook_va
 
 **NB!** Somehow ansible-playbook used with vault-keyring-client.py cannot see the test_user in ansible.cfg but uses the current system $USER!?
 
-Reproduces the same error as above:
-**ERROR! Vault password client script ~/.ansible/vault-keyring-client.py did not find a secret for vault-id=ansible_key_test: b'vault-keyring-client could not find key="ansible_key_test" for user="$USER" via backend="macOS Keyring"\n'**
+It turns out that vault-keyring-client.py and vault-keyring.py uses 2 different methods to get 'username'. vault-keyring.py works nicely and vault-keyring.py not!
 
-It turns out that vault-keyring-client.py and vault-keyring.py uses to different methods to get 'username'! vault-keyring.py works nicely and the other one not!
-
-I just implemented the vault-keyring method for getting usernames in vault-keyring-client. Now it works according to the description in vault-keyring-client comments!
+After implementing the vault-keyring method for getting usernames in vault-keyring-client.py, it now works according to the description in vault-keyring-client comments.
 
 ## Notes
 
-**NB!** It's recommended to put any password files / scripts outside the current folder for security reasons - example path: ***~/.ansible***
+**NB!** It's recommended to put any password files / scripts outside source control ie. git project folder for better security - example path: ***~/.ansible***
 
 ## References
 
