@@ -128,7 +128,6 @@ ansible-playbook playbook_pipe.yml
 
 Use 'ansible_become_pass' in an inventory / host file or any other yaml file like this:
 
-
 ```yaml
 ansible_become_pass="{{ lookup('pipe', './get_pass.py') }}"
 ```
@@ -199,8 +198,11 @@ vault_password_file = vault-keyring.py
 [vault]
 keyname = ansible_key_test
 username = test_user
+
 ```
-and the set password 
+
+and the set password
+
 ```cli
 ./vault-keyring.py set
 ```
