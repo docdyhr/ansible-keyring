@@ -281,7 +281,7 @@ Reproduces the same error as above:
 
 It turns out that vault-keyring-client.py and vault-keyring.py uses to different methods to get 'username'! vault-keyring.py works nicely and the other one not!
 
-**NB** Not sure if the username issue here relates to the this keyring issue specif for  macOS:
+**NB** Not sure if the username issue here relates to the this keyring issue specific for  macOSP:
 [Implement API for retrieving usernames](https://github.com/jaraco/keyring/issues/400)
 
 ## Notes
