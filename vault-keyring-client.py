@@ -70,7 +70,7 @@ import sys
 import getpass
 import keyring
 
-from ansible.config.manager import ConfigManager
+from ansible.config.manager import ConfigManager, get_ini_config_value
 
 KEYNAME_UNKNOWN_RC = 2
 
@@ -90,14 +90,16 @@ def build_arg_parser():
 
 
 def main():
-    config_manager = ConfigManager()
-    username = config_manager.data.get_setting('vault.username')
-    if not username:
-        username = getpass.getuser()
+    config = ConfigManager()
+    username = get_ini_config_value(
+        config._parsers[config._config_file],
+        dict(section='vault', key='username')
+    ) or getpass.getuser()
 
-    keyname = config_manager.data.get_setting('vault.keyname')
-    if not keyname:
-        keyname = 'ansible'
+    keyname = get_ini_config_value(
+        config._parsers[config._config_file],
+        dict(section='vault', key='keyname')
+    ) or 'ansible'
 
     arg_parser = build_arg_parser()
     args = arg_parser.parse_args()
