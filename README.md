@@ -281,6 +281,9 @@ Reproduces the same error as above:
 
 It turns out that vault-keyring-client.py and vault-keyring.py uses to different methods to get 'username'! vault-keyring.py works nicely and the other one not!
 
+**NB** Not sure if the username issue here relates to the this keyring issue specif for  macOS:
+[Implement API for retrieving usernames](https://github.com/jaraco/keyring/issues/400)
+
 ## Notes
 
 **NB!** It's recommended to put any password files / scripts outside the current folder for security reasons - example path: ***~/.ansible***
