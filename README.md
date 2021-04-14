@@ -1,6 +1,6 @@
 # ansible-keyring
 
-Access ansible passwords securely with keyring from Mac keychain.
+Access ansible passwords securely with keyring from macOS keychain.
 
 ## prerequisites
 
@@ -14,11 +14,11 @@ Install keyring with pip in your terminal
 python3 -m pip install keyring
 ```
 
+Add ansible password and check that it works.
+
 ```cli
 keyring set [system] [username]
 ```
-
-Add ansible password and check that it works.
 
 ```cli
 keyring get [system] [username]
@@ -120,13 +120,14 @@ chmod +x get_pass.sh
 chmod +x get_pass.py
 ```
 
-Test of pipe func with get_pass scripts:
+In order to test the get_pass.sh or get_pass.py scripts, uncomment the respective lines in playbook_pipe.yml
 
 ```cli
 ansible-playbook playbook_pipe.yml
 ```
 
-Afterwards you use this with 'ansible_become_pass' in an inventory / host file or any other yaml file like this:
+Use 'ansible_become_pass' in an inventory / host file or any other yaml file like this:
+
 
 ```yaml
 ansible_become_pass="{{ lookup('pipe', './get_pass.py') }}"
@@ -199,7 +200,7 @@ vault_password_file = vault-keyring.py
 keyname = ansible_key_test
 username = test_user
 ```
-
+and the set password 
 ```cli
 ./vault-keyring.py set
 ```
@@ -232,7 +233,7 @@ ansible-vault encrypt vars/api_key.yml
 
 ### Test ansible-vault with vault-keyring.py
 
-vault-keyring.py is automaticly used when defined in ansible.cfp
+vault-keyring.py is automaticly used when defined in ansible.cfg
 
 ```cli
 ansible-vault view vars/api_key.yml --vault-password-file vault-keyring.py
@@ -249,8 +250,6 @@ ansible-vault view vars/api_key.yml
 ```cli
 ansible-vault view vars/api_key.yml --vault-id ansible_key_test@vault-keyring-client.py
 ```
-
-***ToDo:*** Somehow ansible-vault with vault-keyring-client.py cannot see the test_user in ansible.cfg but uses the current system $USER!?
 
 ### Use with ansible-playbook with vault-keyring.py
 
@@ -274,9 +273,9 @@ ansible-playbook playbook_vault.yml
 ansible-playbook --vault-id ansible_key_test@vault-keyring-client.py playbook_vault.yml
 ```
 
-**NB!** Somehow ansible-playbook used with vault-keyring-client.py cannot see the test_user in ansible.cfg but uses the current system $USER!?
+**NB!** Somehow vault-keyring-client.py could not see the test_user in ansible.cfg, but kept on using the current system $USER.
 
-It turns out that vault-keyring-client.py and vault-keyring.py uses 2 different methods to get 'username'. vault-keyring.py works nicely and vault-keyring.py not!
+vault-keyring-client.py and vault-keyring.py uses 2 different methods to get 'username'. vault-keyring.py works nicely and vault-keyring-client.py not!
 
 After implementing the vault-keyring method for getting usernames in vault-keyring-client.py, it now works according to the description in vault-keyring-client comments.
 

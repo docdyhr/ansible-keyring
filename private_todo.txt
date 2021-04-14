@@ -6,6 +6,3 @@ Possible solutions:
  python path
  executable bit ie chmod +x
  cp python file to project folder
-
-2) get vault-keyring-client.py to work
-  problem: cannot see username in ansible.cfg
