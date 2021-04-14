@@ -279,6 +279,8 @@ ToDo: Somehow ansible-playbook used with vault-keyring-client.py cannot see the 
 Reproduces the same error as above:
 **ERROR! Vault password client script ~/.ansible/vault-keyring-client.py did not find a secret for vault-id=ansible_key_test: b'vault-keyring-client could not find key="ansible_key_test" for user="$USER" via backend="macOS Keyring"\n'**
 
+It turns out that vault-keyring-client.py and vault-keyring.py uses to different methods to get 'username'! vault-keyring.py works nicely and the other one not!
+
 ## Notes
 
 **NB!** It's recommended to put any password files / scripts outside the current folder for security reasons - example path: ***~/.ansible***
