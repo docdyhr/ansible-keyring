@@ -48,7 +48,7 @@ Install from terminal:
 ansible-galaxy collection install community.general
 ```
 
-Verify your community.general installation:
+Verify and check community.general installation version:
 
 ```cli
 ansible-galaxy collection verify community.general -vvv
@@ -83,14 +83,13 @@ community.general.keyring examples:
 ansible_become_pass=={{ lookup('community.general.keyring','test test') }}
 ```
 
-### Ressources
+***fails*** import keyring in community.general.keyring lookup unfortunately fails:
 
-[Docs Community.General](https://docs.ansible.com/ansible/latest/collections/community/general/)
+```cli
+ansible-playbook playbook_keyring.yml
+```
 
-### Problems
-
-***TASK [test of keyring plugin]
-fatal: [localhost]: FAILED! => {"msg": "Can't LOOKUP(keyring): missing required python library 'keyring'"}***
+`fatal: [localhost]: FAILED! => {"msg": "An unhandled exception occurred while running the lookup plugin 'community.general.keyring'. Error was a <class 'ansible.errors.AnsibleError'>, original message: Can't LOOKUP(keyring): missing required python library 'keyring'"}`
 
 Even when keyring is correctly installed ansible cannot reference the python keyring library with 'import keyring' from inside community.general.keyring. It seems that ansible has problems with python libraries installed outside of the ansible context. Maybe community.general has to be installed using requirements.txt together with pip env in order to work!?
 
@@ -101,6 +100,10 @@ ANSIBLE_PYTHON_INTERPRETER=/usr/local/bin/python3 ansible-playbook playbook_keyr
 
 ANSIBLE_PYTHON_INTERPRETER=/usr/bin/python3 ansible-playbook playbook_keyring.yml
 ```
+
+### Ressources
+
+[Docs Community.General](https://docs.ansible.com/ansible/latest/collections/community/general/)
 
 ## A simple solution without using community.general.keyring
 
@@ -113,11 +116,17 @@ keyring get test test
 
 Use get_pass.sh with macOS 'security' cli tool or get_pass.py with keyring to retrieve a password.
 
-Remember to chmod scripts:
+Remember to enable execute bits on the scripts:
 
 ```cli
 chmod +x get_pass.sh
 chmod +x get_pass.py
+```
+
+The pipe lookup plugin:
+
+```cli
+ansible-doc -t lookup pipe
 ```
 
 In order to test the get_pass.sh or get_pass.py scripts, uncomment the respective lines in playbook_pipe.yml
@@ -132,7 +141,11 @@ Use 'ansible_become_pass' in an inventory / host file or any other yaml file lik
 ansible_become_pass="{{ lookup('pipe', './get_pass.py') }}"
 ```
 
-## Using ansible-vault vault-keyring.py and vault-keyring-client.py with macOS Keyring / keychain
+## Using community.general scripts vault-keyring.py and vault-keyring-client.py with macOS Keyring / keychain
+
+```cli
+open ~/.ansible/collections/ansible_collections/community/general/scripts/vault/ 
+```
 
 This is a new type of vault-password script  (a 'client') that takes advantage of and enhances the multiple vault password support.
 
