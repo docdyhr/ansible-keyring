@@ -6,3 +6,4 @@ Possible solutions:
  python path
  executable bit ie chmod +x
  cp python file to project folder
+ python3 and sudo python3 uses different paths / versions of Pyhton3 
