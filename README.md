@@ -83,23 +83,15 @@ community.general.keyring examples:
 ansible_become_pass=={{ lookup('community.general.keyring','test test') }}
 ```
 
-***fails*** import keyring in community.general.keyring lookup unfortunately fails:
-
 ```cli
 ansible-playbook playbook_keyring.yml
 ```
 
+***fails*** import keyring in community.general.keyring lookup unfortunately fails on macOS:
+
 `fatal: [localhost]: FAILED! => {"msg": "An unhandled exception occurred while running the lookup plugin 'community.general.keyring'. Error was a <class 'ansible.errors.AnsibleError'>, original message: Can't LOOKUP(keyring): missing required python library 'keyring'"}`
 
-Even when keyring is correctly installed ansible cannot reference the python keyring library with 'import keyring' from inside community.general.keyring. It seems that ansible has problems with python libraries installed outside of the ansible context. Maybe community.general has to be installed using requirements.txt together with pip env in order to work!?
-
-Different python paths did not work:
-
-```cli
-ANSIBLE_PYTHON_INTERPRETER=/usr/local/bin/python3 ansible-playbook playbook_keyring.yml
-
-ANSIBLE_PYTHON_INTERPRETER=/usr/bin/python3 ansible-playbook playbook_keyring.yml
-```
+See issue [#1](https://github.com/docdyhr/ansible-keyring/issues/1)
 
 ### Ressources
 
