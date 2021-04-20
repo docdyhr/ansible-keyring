@@ -11,6 +11,6 @@
         # msg: "{{ lookup('community.general.keyring', 'test test') }}"
         msg: "Password: {{item}}"
       with_community.general.keyring: 
-        - 'servicename username'
+        - 'test test'
 
 ...
