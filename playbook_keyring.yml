@@ -1,16 +1,16 @@
 ---
-- name: test ansible-vault with keyring
+- name: test keyring with community.general.keyring
   hosts: control
   gather_facts: false
- 
 
   tasks:
     - name: test of community.general.keyring
       debug:
         # msg: "{{ lookup('pipe', './get_pass.py') }}"
         # msg: "{{ lookup('community.general.keyring', 'test test') }}"
-        msg: "Password: {{item}}"
-      with_community.general.keyring: 
+        msg: "Password: {{ item }}"
+      with_community.general.keyring:
         - 'test test'
+        - 'ansible_key_test test_user'
 
 ...

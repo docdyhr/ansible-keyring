@@ -2,11 +2,11 @@
 - name: lookup password and pipe it to stout
   hosts: control
   gather_facts: false
-  collections:
-    - community.general
+  # collections:
+  #   - community.general
 
   tasks:
-    - name: raw result of running date command"
+    - name: test pipe lookup plugin
       debug:
         # msg: "{{ lookup('pipe', './get_pass.sh') }}"
         # msg: "{{ lookup('pipe', './get_pass.py') }}"
