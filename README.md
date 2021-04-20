@@ -292,6 +292,7 @@ After implementing the vault-keyring method for getting usernames in vault-keyri
 
 ## References
 
+[Welcome to keyring documentation](https://keyring.readthedocs.io/en/latest/index.html)
 [ansible-vault](https://docs.ansible.com/ansible/latest/cli/ansible-vault.html)  
 [Encrypting content with Ansible Vault](http://docs.ansible.com/ansible/2.10/user_guide/vault.html)  
 [community.general/scripts/vault](https://github.com/ansible-collections/community.general/blob/main/scripts/vault/)
