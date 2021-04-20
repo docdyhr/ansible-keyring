@@ -24,6 +24,12 @@ keyring set [system] [username]
 keyring get [system] [username]
 ```
 
+All examples here uses the password: test
+
+```cli
+keyring set test test
+```
+
 ## Install [community.general.keyring](https://docs.ansible.com/ansible/latest/collections/community/general/keyring_lookup.html#ansible-collections-community-general-keyring-lookup)
 
 The keyring plugin allows you to access data stored in the OS provided keyring/keychain. The keyring plugin is part of the Community General Collection. To use it you need to install [community.general](https://galaxy.ansible.com/community/general?extIdCarryOver=true&sc_cid=701f2000001OH7YAAW).
