@@ -93,10 +93,7 @@ ansible_become_pass=={{ lookup('community.general.keyring','test test') }}
 ansible-playbook playbook_keyring.yml
 ```
 
-***fails*** import keyring in community.general.keyring lookup unfortunately fails on macOS:
-
-`fatal: [localhost]: FAILED! => {"msg": "An unhandled exception occurred while running the lookup plugin 'community.general.keyring'. Error was a <class 'ansible.errors.AnsibleError'>, original message: Can't LOOKUP(keyring): missing required python library 'keyring'"}`
-
+***NB!*** Fails on some macOS systems with more versions of python installed.
 See issue [#1](https://github.com/docdyhr/ansible-keyring/issues/1)
 
 ### Ressources
