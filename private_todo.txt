@@ -3,14 +3,4 @@
 problem:
 TASK [test of keyring plugin] fatal: [localhost]: FAILED! => {"msg": "Can't LOOKUP(keyring): missing required python library 'keyring'"}
 
-Possible solutions:
- python path / different versions of python installed on localhost combined with sudo
- 
- See issue [#1](https://github.com/docdyhr/ansible-keyring/issues/1)
- 
- executable bit ie chmod +x  NO ( not nescesary in this context as community.general.keyring is an ansible plugin )
- cp python file to project folder No ( tested in another context and it did not matter! )
- python path
- executable bit ie chmod +x
- cp python file to project folder
- python3 and sudo python3 uses different paths / versions of Pyhton3 
+Solved: Python configuration problem solved on macOS localhost with install of the default python3 package from python.org!
