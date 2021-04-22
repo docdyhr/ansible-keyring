@@ -11,4 +11,5 @@
         # msg: "{{ lookup('pipe', './get_pass.sh') }}"
         # msg: "{{ lookup('pipe', './get_pass.py') }}"
         msg: "{{ lookup('pipe', './vault-keyring.py') }}"
+
 ...
