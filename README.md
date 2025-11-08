@@ -14,6 +14,12 @@ Install keyring with pip in your terminal
 python3 -m pip install keyring
 ```
 
+Or install all dependencies using the requirements file:
+
+```cli
+pip install -r requirements.txt
+```
+
 Add ansible password and check that it works.
 
 ```cli
@@ -24,11 +30,13 @@ keyring set [system] [username]
 keyring get [system] [username]
 ```
 
-All examples here uses the password: test
+All examples here use the password: **test** (for demonstration only)
 
 ```cli
 keyring set test test
 ```
+
+**⚠️ WARNING:** The password "test" is used throughout this documentation for demonstration purposes only. **Never use simple or example passwords in production environments.** Always use strong, unique passwords for production systems.
 
 ## Install [community.general.keyring](https://docs.ansible.com/ansible/latest/collections/community/general/keyring_lookup.html#ansible-collections-community-general-keyring-lookup)
 
@@ -42,10 +50,10 @@ Check install path:
 ansible-config dump | grep COLLECTIONS_PATHS
 ```
 
-Costum Path:
+Custom Path:
 
 ```cli
-ansible-galaxy collection install community.general -p [Your_Costum_Path]
+ansible-galaxy collection install community.general -p [Your_Custom_Path]
 ```
 
 Install from terminal:
@@ -177,13 +185,15 @@ If the 'client' script can't find a secret for the --vault-id, the script will e
 
 ### Files
 
-playbook_pipe.yml  
-playbook_vault.yml  
-/vars/api_key.yml
+playbook_pipe.yml
+playbook_vault.yml
+/vars/api_key.yml (contains example API key for demonstration)
 vault-keyring.py
 vault-keyring-client.py
 
-### Initilise scripts
+**Note:** The `vars/api_key.yml` file contains an example API key for demonstration purposes. In production, this file should contain your actual secrets and be encrypted using `ansible-vault encrypt`.
+
+### Initialize scripts
 
 The original ansible-vault scripts are found in community.general scripts/vault folder (ie. ~/.ansible/collections/ansible_collections/community/general/scripts/vault/)
 
