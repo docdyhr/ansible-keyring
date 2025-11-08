@@ -193,7 +193,7 @@ vault-keyring-client.py
 
 **Note:** The `vars/api_key.yml` file contains an example API key for demonstration purposes. In production, this file should contain your actual secrets and be encrypted using `ansible-vault encrypt`.
 
-### Initilise scripts
+### Initialize scripts
 
 The original ansible-vault scripts are found in community.general scripts/vault folder (ie. ~/.ansible/collections/ansible_collections/community/general/scripts/vault/)
 

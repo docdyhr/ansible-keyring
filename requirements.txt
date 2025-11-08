@@ -5,8 +5,8 @@
 
 # Keyring library for secure password storage
 # Provides interface to OS native keyring/keychain
-keyring>=23.0.0
+keyring>=25.0.0,<26.0.0
 
 # Ansible for automation and vault functionality
 # Required for ConfigManager and vault operations
-ansible>=2.9.0
+ansible>=2.16.0,<3.0.0
