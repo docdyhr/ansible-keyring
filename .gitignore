@@ -266,7 +266,7 @@ GitHub.sublime-settings
 .ionide
 
 ### vscode ###
-!.vscode/settings.json
+# settings.json is system-specific and should not be committed
 !.vscode/extensions.json
 
 # End of https://www.toptal.com/developers/gitignore/api/visualstudiocode,macos,ansible,git,gitbook,homebrew,python,sublimetext,tortoisegit,vscode

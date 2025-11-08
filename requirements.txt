@@ -1,0 +1,12 @@
+# Python dependencies for ansible-keyring project
+#
+# Install with: pip install -r requirements.txt
+# or: python3 -m pip install -r requirements.txt
+
+# Keyring library for secure password storage
+# Provides interface to OS native keyring/keychain
+keyring>=23.0.0
+
+# Ansible for automation and vault functionality
+# Required for ConfigManager and vault operations
+ansible>=2.9.0
