@@ -5,10 +5,11 @@
 
 # Keyring library for secure password storage
 # Provides interface to OS native keyring/keychain
-# Updated to latest stable version for security patches
-keyring>=25.6.0,<26.0.0
+# Pinned to latest stable version for security patches
+keyring==25.6.0
 
 # Ansible for automation and vault functionality
 # Required for ConfigManager and vault operations
-# Updated to latest stable version for security patches
-ansible>=12.2.0,<13.0.0
+# Pinned to latest stable version for security patches
+# Note: ansible 12.2.0 depends on ansible-core ~=2.19.4
+ansible==12.2.0
