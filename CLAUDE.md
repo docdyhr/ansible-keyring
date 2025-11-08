@@ -124,9 +124,44 @@ chmod +x vault-keyring.py vault-keyring-client.py get_pass.py
 
 The project README recommends storing vault password scripts outside source control (e.g., `~/.ansible/`) for better security. The scripts in this repo are examples.
 
-## Known Issues
+## Known Issues and Troubleshooting
 
-**Issue #1**: community.general.keyring lookup fails on macOS systems with multiple Python versions installed. Use the pipe lookup method with get_pass.py or vault-keyring scripts as workaround.
+### Issue #1: community.general.keyring fails with multiple Python versions
+
+**Status**: Open since April 2021
+
+**Problem**: Ansible's `community.general.keyring` lookup plugin cannot import the keyring library when multiple Python installations exist on macOS (Homebrew Python, python.org Python, system Python).
+
+**Error Message**: "missing required python library 'keyring'"
+
+**Root Cause**: Python path conflicts - Ansible may be using a different Python interpreter than where keyring is installed.
+
+**Solutions** (in order of recommendation):
+
+1. **Use pipe lookup workaround (most reliable)**:
+   ```yaml
+   ansible_become_pass: "{{ lookup('pipe', './vault-keyring.py') }}"
+   ```
+   This method bypasses the community.general.keyring plugin entirely and works across all Python configurations.
+
+2. **Install keyring into Ansible's specific Python environment**:
+   ```bash
+   # Find which Python Ansible uses
+   ansible --version | grep "python version"
+   
+   # Install keyring into that environment
+   /opt/homebrew/opt/ansible/libexec/bin/pip3 install keyring
+   ```
+
+3. **Switch to python.org Python distribution**:
+   - Install from python.org instead of Homebrew
+   - Update PATH to prioritize python.org: `export PATH="/Library/Frameworks/Python.framework/Versions/3.x/bin:${PATH}"`
+   - Reinstall ansible and keyring
+
+**When to use each approach**:
+- vault-keyring.py/vault-keyring-client.py scripts: Always work, recommended for all use cases
+- community.general.keyring: Only use if you've resolved the Python path issues
+- get_pass.py: Simple demo/testing, requires hardcoded credentials
 
 ## Testing Setup
 

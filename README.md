@@ -101,8 +101,8 @@ ansible_become_pass=={{ lookup('community.general.keyring','test test') }}
 ansible-playbook playbook_keyring.yml
 ```
 
-***NB!*** Fails on some macOS systems with more versions of python installed.
-See issue [#1](https://github.com/docdyhr/ansible-keyring/issues/1)
+***NB!*** Fails on some macOS systems with multiple Python versions installed.
+See issue [#1](https://github.com/docdyhr/ansible-keyring/issues/1) for troubleshooting steps.
 
 ### Ressources
 
@@ -302,6 +302,49 @@ After implementing the vault-keyring method for getting usernames in vault-keyri
 ## Notes
 
 **NB!** It's recommended to put any password files / scripts outside source control ie. git project folder for better security - example path: ***~/.ansible***
+
+## Troubleshooting
+
+### Issue #1: community.general.keyring fails on macOS with multiple Python versions
+
+**Symptom:** Error message "missing required python library 'keyring'" despite keyring being installed.
+
+**Root Cause:** Ansible cannot locate the keyring module when multiple Python installations exist (Homebrew Python vs python.org vs system Python).
+
+**Solutions:**
+
+1. **Install keyring directly into Ansible's Python environment:**
+   ```yaml
+   - ansible.builtin.pip:
+       executable: /opt/homebrew/opt/ansible/libexec/bin/pip3
+       name: keyring
+   ```
+   
+   Or via command line:
+   ```bash
+   # Find Ansible's Python path
+   ansible --version | grep "python version"
+   
+   # Install keyring into that Python environment
+   /path/to/ansible/python -m pip install keyring
+   ```
+
+2. **Use python.org Python instead of Homebrew:**
+   - Download Python from [python.org](https://www.python.org/downloads/)
+   - Add to PATH in `~/.zshrc` or `~/.bash_profile`:
+     ```bash
+     export PATH="/Library/Frameworks/Python.framework/Versions/3.x/bin:${PATH}"
+     ```
+   - Reinstall ansible and keyring using this Python
+
+3. **Use the pipe lookup workaround (recommended):**
+   Instead of `community.general.keyring`, use the pipe lookup with vault-keyring scripts:
+   ```yaml
+   ansible_become_pass: "{{ lookup('pipe', './vault-keyring.py') }}"
+   ```
+   This approach works reliably across all Python configurations.
+
+For more details, see [Issue #1](https://github.com/docdyhr/ansible-keyring/issues/1).
 
 ## References
 
