@@ -104,7 +104,7 @@ ansible-playbook playbook_keyring.yml
 ***NB!*** Fails on some macOS systems with multiple Python versions installed.
 See issue [#1](https://github.com/docdyhr/ansible-keyring/issues/1) for troubleshooting steps.
 
-### Ressources
+### Resources
 
 [Docs Community.General](https://docs.ansible.com/ansible/latest/collections/community/general/)
 
@@ -207,7 +207,7 @@ Change the python shebang line in vault-keyring.py and vault-keyring-client.py t
 chmod +x vault-keyring.py vault-keyring-client.py
 ```
 
-### Setup password with vault-keyring.py with the creditals in ansible.cfg
+### Setup password with vault-keyring.py with the credentials in ansible.cfg
 
 ```cli
 [defaults]

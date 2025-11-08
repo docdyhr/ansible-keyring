@@ -1,5 +1,12 @@
 ---
+# ============================================================================
+# DEMO CREDENTIALS - DO NOT USE IN PRODUCTION
+# ============================================================================
+# This file contains example API keys for demonstration and testing purposes.
+# In production, this file should contain your actual secrets and be encrypted
+# using: ansible-vault encrypt vars/api_key.yml
+#
+# See README.md for detailed instructions on using ansible-vault with keyring
+# ============================================================================
 
 myapp_api_key: "l9bTqfBlbXTQiDaJMqgPJ1VdeFLfId98"
-
-...

@@ -1,6 +1,0 @@
-1) get community.general.keyring to work
-
-problem:
-TASK [test of keyring plugin] fatal: [localhost]: FAILED! => {"msg": "Can't LOOKUP(keyring): missing required python library 'keyring'"}
-
-Solved: Python configuration problem solved on macOS localhost with install of the default python3 package from python.org!
