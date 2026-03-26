@@ -44,44 +44,65 @@
 #
 # ansible-playbook --vault-password-file=/path/to/vault-keyring.py site.yml
 
-from __future__ import (absolute_import, division, print_function)
+from __future__ import absolute_import, division, print_function
+
 __metaclass__ = type
 
+import configparser
+import os
 import sys
 import getpass
 import keyring
 
-from ansible.config.manager import ConfigManager, get_ini_config_value
+
+def _find_ansible_cfg():
+    """Find ansible.cfg using standard Ansible config search order."""
+    env_config = os.environ.get("ANSIBLE_CONFIG")
+    if env_config and os.path.isfile(env_config):
+        return env_config
+    cwd_cfg = os.path.join(os.getcwd(), "ansible.cfg")
+    if os.path.isfile(cwd_cfg):
+        return cwd_cfg
+    home_cfg = os.path.expanduser("~/.ansible.cfg")
+    if os.path.isfile(home_cfg):
+        return home_cfg
+    if os.path.isfile("/etc/ansible/ansible.cfg"):
+        return "/etc/ansible/ansible.cfg"
+    return None
+
+
+def _get_vault_config():
+    """Read vault username and keyname from ansible.cfg [vault] section."""
+    cfg_path = _find_ansible_cfg()
+    if cfg_path is None:
+        return None, None
+    config = configparser.ConfigParser()
+    config.read(cfg_path)
+    username = config.get("vault", "username", fallback=None)
+    keyname = config.get("vault", "keyname", fallback=None)
+    return username, keyname
 
 
 def main():
-    config = ConfigManager()
-    username = get_ini_config_value(
-        config._parsers[config._config_file],
-        dict(section='vault', key='username')
-    ) or getpass.getuser()
+    cfg_username, cfg_keyname = _get_vault_config()
+    username = cfg_username or getpass.getuser()
+    keyname = cfg_keyname or "ansible"
 
-    keyname = get_ini_config_value(
-        config._parsers[config._config_file],
-        dict(section='vault', key='keyname')
-    ) or 'ansible'
-
-    if len(sys.argv) == 2 and sys.argv[1] == 'set':
+    if len(sys.argv) == 2 and sys.argv[1] == "set":
         intro = 'Storing password in "{}" user keyring using key name: {}\n'
         sys.stdout.write(intro.format(username, keyname))
         password = getpass.getpass()
-        confirm = getpass.getpass('Confirm password: ')
+        confirm = getpass.getpass("Confirm password: ")
         if password == confirm:
             keyring.set_password(keyname, username, password)
         else:
-            sys.stderr.write('Passwords do not match\n')
+            sys.stderr.write("Passwords do not match\n")
             sys.exit(1)
     else:
-        sys.stdout.write('{0}\n'.format(keyring.get_password(keyname,
-                                                             username)))
+        sys.stdout.write("{0}\n".format(keyring.get_password(keyname, username)))
 
     sys.exit(0)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
