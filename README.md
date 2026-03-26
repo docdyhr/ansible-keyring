@@ -110,7 +110,7 @@ See issue [#1](https://github.com/docdyhr/ansible-keyring/issues/1) for troubles
 
 ## A simple solution without using community.general.keyring
 
-Use Keyring to set a 'test' acount with label 'test':
+Use Keyring to set a 'test' account with label 'test':
 
 ```cli
 keyring set test test
@@ -253,13 +253,13 @@ ansible-vault encrypt vars/api_key.yml
 
 ### Test ansible-vault with vault-keyring.py
 
-vault-keyring.py is automaticly used when defined in ansible.cfg
+vault-keyring.py is automatically used when defined in ansible.cfg
 
 ```cli
 ansible-vault view vars/api_key.yml --vault-password-file vault-keyring.py
 ```
 
-The below will also work as ansible-vault will automaticly detect and decrypt the vars/api_key.yml file with vault-keyring.py
+The below will also work as ansible-vault will automatically detect and decrypt the vars/api_key.yml file with vault-keyring.py
 
 ```cli
 ansible-vault view vars/api_key.yml
@@ -281,7 +281,7 @@ ansible-playbook playbook_vault.yml --vault-password-file vault-keyring.py
 ansible-playbook --vault-id vault-keyring.py playbook_vault.yml
 ```
 
-vault-keyring.py is automaticly detected and used when the credentials is defined in ansible.cfg, so this will also work:
+vault-keyring.py is automatically detected and used when the credentials are defined in ansible.cfg, so this will also work:
 
 ```cli
 ansible-playbook playbook_vault.yml
@@ -304,6 +304,14 @@ After implementing the vault-keyring method for getting usernames in vault-keyri
 **NB!** It's recommended to put any password files / scripts outside source control ie. git project folder for better security - example path: ***~/.ansible***
 
 ## Troubleshooting
+
+### Issue #3: ImportError with newer Ansible versions
+
+**Symptom:** `ImportError: cannot import name 'get_ini_config_value' from 'ansible.config.manager'`
+
+**Root Cause:** Ansible removed the `get_ini_config_value` function from its internal API (see [ansible/ansible#85404](https://github.com/ansible/ansible/pull/85404)).
+
+**Resolution:** The vault scripts (`vault-keyring.py` and `vault-keyring-client.py`) have been updated to use Python's standard `configparser` module instead of Ansible's private API. This makes them compatible with all Ansible versions.
 
 ### Issue #1: community.general.keyring fails on macOS with multiple Python versions
 
