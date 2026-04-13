@@ -7,7 +7,6 @@ import py_compile
 import os
 import subprocess
 
-
 SCRIPT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
