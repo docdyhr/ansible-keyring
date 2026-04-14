@@ -126,6 +126,10 @@ The project README recommends storing vault password scripts outside source cont
 
 ## Known Issues and Troubleshooting
 
+### Issue #3: ImportError with newer Ansible versions (RESOLVED)
+
+**Status**: Fixed - vault scripts now use Python's `configparser` instead of Ansible's private `get_ini_config_value` API which was removed in newer Ansible versions. The scripts read the `[vault]` section from `ansible.cfg` directly using the standard Ansible config search order (ANSIBLE_CONFIG env var > ./ansible.cfg > ~/.ansible.cfg > /etc/ansible/ansible.cfg).
+
 ### Issue #1: community.general.keyring fails with multiple Python versions
 
 **Status**: Open since April 2021

@@ -1,82 +1,225 @@
-"""Behavioral tests for vault-keyring.py."""
+"""
+Tests for vault-keyring.py script.
+"""
 
 import getpass
+import os
 import sys
-import types
+from unittest.mock import patch, MagicMock
+
+import importlib
+import importlib.util
 
 import pytest
 
-from tests.conftest import install_fake_ansible_modules, load_module
+SCRIPT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
-def install_fake_keyring(monkeypatch, secret="stored-secret"):
-    """Install a minimal keyring shim and record calls."""
-    calls = {"get": [], "set": []}
-    keyring_module = types.ModuleType("keyring")
-
-    def get_password(service, username):
-        calls["get"].append((service, username))
-        return secret
-
-    def set_password(service, username, password):
-        calls["set"].append((service, username, password))
-
-    keyring_module.get_password = get_password
-    keyring_module.set_password = set_password
-    monkeypatch.setitem(sys.modules, "keyring", keyring_module)
-    return calls
+def _import_vault_keyring():
+    """Import vault-keyring.py as a module (handles hyphen in filename)."""
+    spec = importlib.util.spec_from_file_location(
+        "vault_keyring", os.path.join(SCRIPT_DIR, "vault-keyring.py")
+    )
+    module = importlib.util.module_from_spec(spec)
+    with patch.dict("sys.modules", {"keyring": MagicMock()}):
+        spec.loader.exec_module(module)
+    return module
 
 
-def test_vault_keyring_reads_password_from_ansible_config(monkeypatch, stdio_buffers):
-    """Default execution should print the configured secret."""
-    install_fake_ansible_modules(monkeypatch, username="ci-user", keyname="ci-vault")
-    calls = install_fake_keyring(monkeypatch, secret="vault-secret")
-    module = load_module("vault_keyring_read", "vault-keyring.py")
-    monkeypatch.setattr(sys, "argv", ["vault-keyring.py"])
-
-    with pytest.raises(SystemExit) as exc:
-        module.main()
-
-    stdout, stderr = stdio_buffers
-    assert exc.value.code == 0
-    assert stdout.getvalue() == "vault-secret\n"
-    assert stderr.getvalue() == ""
-    assert calls["get"] == [("ci-vault", "ci-user")]
+def _import_vault_keyring_client():
+    """Import vault-keyring-client.py as a module."""
+    spec = importlib.util.spec_from_file_location(
+        "vault_keyring_client", os.path.join(SCRIPT_DIR, "vault-keyring-client.py")
+    )
+    module = importlib.util.module_from_spec(spec)
+    with patch.dict("sys.modules", {"keyring": MagicMock()}):
+        spec.loader.exec_module(module)
+    return module
 
 
-def test_vault_keyring_set_stores_password(monkeypatch, stdio_buffers):
-    """Set mode should persist the password after confirmation."""
-    install_fake_ansible_modules(monkeypatch)
-    calls = install_fake_keyring(monkeypatch)
-    module = load_module("vault_keyring_set", "vault-keyring.py")
-    prompts = iter(["new-secret", "new-secret"])
-    monkeypatch.setattr(getpass, "getpass", lambda prompt="": next(prompts))
-    monkeypatch.setattr(sys, "argv", ["vault-keyring.py", "set"])
+class TestFindAnsibleCfg:
+    """Tests for _find_ansible_cfg function."""
 
-    with pytest.raises(SystemExit) as exc:
-        module.main()
+    def test_finds_ansible_cfg_via_env_var(self, tmp_path):
+        cfg_file = tmp_path / "custom_ansible.cfg"
+        cfg_file.write_text("[defaults]\n")
+        mod = _import_vault_keyring()
+        with patch.dict(os.environ, {"ANSIBLE_CONFIG": str(cfg_file)}):
+            result = mod._find_ansible_cfg()
+        assert result == str(cfg_file)
 
-    stdout, stderr = stdio_buffers
-    assert exc.value.code == 0
-    assert "Storing password" in stdout.getvalue()
-    assert stderr.getvalue() == ""
-    assert calls["set"] == [("ansible_key_test", "test_user", "new-secret")]
+    def test_env_var_missing_file_skipped(self, tmp_path):
+        mod = _import_vault_keyring()
+        with patch.dict(os.environ, {"ANSIBLE_CONFIG": "/nonexistent/ansible.cfg"}):
+            with patch("os.getcwd", return_value=str(tmp_path)):
+                result = mod._find_ansible_cfg()
+        assert result is None
+
+    def test_finds_ansible_cfg_in_cwd(self, tmp_path):
+        cfg_file = tmp_path / "ansible.cfg"
+        cfg_file.write_text("[defaults]\n")
+        mod = _import_vault_keyring()
+        with patch.dict(os.environ, {}, clear=True):
+            os.environ.pop("ANSIBLE_CONFIG", None)
+            with patch("os.getcwd", return_value=str(tmp_path)):
+                result = mod._find_ansible_cfg()
+        assert result == str(cfg_file)
+
+    def test_returns_none_when_no_config(self, tmp_path):
+        mod = _import_vault_keyring()
+        with patch.dict(os.environ, {}, clear=True):
+            os.environ.pop("ANSIBLE_CONFIG", None)
+            with patch("os.getcwd", return_value=str(tmp_path)):
+                with patch("os.path.isfile", return_value=False):
+                    result = mod._find_ansible_cfg()
+        assert result is None
 
 
-def test_vault_keyring_set_rejects_mismatched_confirmation(monkeypatch, stdio_buffers):
-    """Set mode should fail fast when the confirmation does not match."""
-    install_fake_ansible_modules(monkeypatch)
-    calls = install_fake_keyring(monkeypatch)
-    module = load_module("vault_keyring_mismatch", "vault-keyring.py")
-    prompts = iter(["first-secret", "second-secret"])
-    monkeypatch.setattr(getpass, "getpass", lambda prompt="": next(prompts))
-    monkeypatch.setattr(sys, "argv", ["vault-keyring.py", "set"])
+class TestGetVaultConfig:
+    """Tests for _get_vault_config function."""
 
-    with pytest.raises(SystemExit) as exc:
-        module.main()
+    def test_reads_vault_section(self, tmp_path):
+        cfg_file = tmp_path / "ansible.cfg"
+        cfg_file.write_text(
+            "[defaults]\n"
+            "inventory = hosts\n\n"
+            "[vault]\n"
+            "username = test_user\n"
+            "keyname = my_vault_key\n"
+        )
+        mod = _import_vault_keyring()
+        with patch.object(mod, "_find_ansible_cfg", return_value=str(cfg_file)):
+            username, keyname = mod._get_vault_config()
+        assert username == "test_user"
+        assert keyname == "my_vault_key"
 
-    stdout, stderr = stdio_buffers
-    assert exc.value.code == 1
-    assert "Storing password" in stdout.getvalue()
-    assert "Passwords do not match" in stderr.getvalue()
-    assert calls["set"] == []
+    def test_missing_vault_section(self, tmp_path):
+        cfg_file = tmp_path / "ansible.cfg"
+        cfg_file.write_text("[defaults]\ninventory = hosts\n")
+        mod = _import_vault_keyring()
+        with patch.object(mod, "_find_ansible_cfg", return_value=str(cfg_file)):
+            username, keyname = mod._get_vault_config()
+        assert username is None
+        assert keyname is None
+
+    def test_no_config_file(self):
+        mod = _import_vault_keyring()
+        with patch.object(mod, "_find_ansible_cfg", return_value=None):
+            username, keyname = mod._get_vault_config()
+        assert username is None
+        assert keyname is None
+
+    def test_partial_vault_section(self, tmp_path):
+        cfg_file = tmp_path / "ansible.cfg"
+        cfg_file.write_text("[vault]\nusername = only_user\n")
+        mod = _import_vault_keyring()
+        with patch.object(mod, "_find_ansible_cfg", return_value=str(cfg_file)):
+            username, keyname = mod._get_vault_config()
+        assert username == "only_user"
+        assert keyname is None
+
+
+class TestVaultKeyringClientArgParser:
+    """Tests for vault-keyring-client.py argument parser."""
+
+    def test_build_arg_parser_defaults(self):
+        mod = _import_vault_keyring_client()
+        parser = mod.build_arg_parser()
+        args = parser.parse_args([])
+        assert args.vault_id is None
+        assert args.username is None
+        assert args.set_password is False
+
+    def test_build_arg_parser_vault_id(self):
+        mod = _import_vault_keyring_client()
+        parser = mod.build_arg_parser()
+        args = parser.parse_args(["--vault-id", "my_vault"])
+        assert args.vault_id == "my_vault"
+
+    def test_build_arg_parser_username(self):
+        mod = _import_vault_keyring_client()
+        parser = mod.build_arg_parser()
+        args = parser.parse_args(["--username", "admin"])
+        assert args.username == "admin"
+
+    def test_build_arg_parser_set(self):
+        mod = _import_vault_keyring_client()
+        parser = mod.build_arg_parser()
+        args = parser.parse_args(["--set"])
+        assert args.set_password is True
+
+    def test_build_arg_parser_all_options(self):
+        mod = _import_vault_keyring_client()
+        parser = mod.build_arg_parser()
+        args = parser.parse_args(
+            ["--vault-id", "prod", "--username", "deploy", "--set"]
+        )
+        assert args.vault_id == "prod"
+        assert args.username == "deploy"
+        assert args.set_password is True
+
+
+class TestVaultKeyringMain:
+    """Behavioral tests for vault-keyring.py main()."""
+
+    def test_reads_password_from_config(self, capsys, monkeypatch):
+        """Default execution prints the configured secret."""
+        mod = _import_vault_keyring()
+        mock_keyring = MagicMock()
+        mock_keyring.get_password.return_value = "vault-secret"
+        monkeypatch.setattr(mod, "keyring", mock_keyring)
+        monkeypatch.setattr(mod, "_get_vault_config", lambda: ("ci-user", "ci-vault"))
+        monkeypatch.setattr(sys, "argv", ["vault-keyring.py"])
+
+        with pytest.raises(SystemExit) as exc:
+            mod.main()
+
+        out, err = capsys.readouterr()
+        assert exc.value.code == 0
+        assert out == "vault-secret\n"
+        assert err == ""
+        mock_keyring.get_password.assert_called_once_with("ci-vault", "ci-user")
+
+    def test_set_stores_password(self, capsys, monkeypatch):
+        """Set mode persists the password after confirmation."""
+        mod = _import_vault_keyring()
+        mock_keyring = MagicMock()
+        monkeypatch.setattr(mod, "keyring", mock_keyring)
+        monkeypatch.setattr(
+            mod, "_get_vault_config", lambda: ("test_user", "ansible_key_test")
+        )
+        prompts = iter(["new-secret", "new-secret"])
+        monkeypatch.setattr(getpass, "getpass", lambda prompt="": next(prompts))
+        monkeypatch.setattr(sys, "argv", ["vault-keyring.py", "set"])
+
+        with pytest.raises(SystemExit) as exc:
+            mod.main()
+
+        out, err = capsys.readouterr()
+        assert exc.value.code == 0
+        assert "Storing password" in out
+        assert err == ""
+        mock_keyring.set_password.assert_called_once_with(
+            "ansible_key_test", "test_user", "new-secret"
+        )
+
+    def test_set_rejects_mismatched_confirmation(self, capsys, monkeypatch):
+        """Set mode fails when confirmation does not match."""
+        mod = _import_vault_keyring()
+        mock_keyring = MagicMock()
+        monkeypatch.setattr(mod, "keyring", mock_keyring)
+        monkeypatch.setattr(
+            mod, "_get_vault_config", lambda: ("test_user", "ansible_key_test")
+        )
+        prompts = iter(["first-secret", "second-secret"])
+        monkeypatch.setattr(getpass, "getpass", lambda prompt="": next(prompts))
+        monkeypatch.setattr(sys, "argv", ["vault-keyring.py", "set"])
+
+        with pytest.raises(SystemExit) as exc:
+            mod.main()
+
+        out, err = capsys.readouterr()
+        assert exc.value.code == 1
+        assert "Storing password" in out
+        assert "Passwords do not match" in err
+        mock_keyring.set_password.assert_not_called()

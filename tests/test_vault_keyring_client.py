@@ -1,113 +1,133 @@
 """Behavioral tests for vault-keyring-client.py."""
 
 import getpass
+import os
 import sys
-import types
+from unittest.mock import patch, MagicMock
+
+import importlib.util
 
 import pytest
 
-from tests.conftest import install_fake_ansible_modules, load_module
+SCRIPT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
-def install_fake_keyring(
-    monkeypatch, secret="client-secret", backend_name="mock-keyring"
-):
-    """Install a keyring shim with predictable behavior for client tests."""
-    calls = {"get": [], "set": []}
-    keyring_module = types.ModuleType("keyring")
-
-    def get_password(service, username):
-        calls["get"].append((service, username))
-        return secret
-
-    def set_password(service, username, password):
-        calls["set"].append((service, username, password))
-
-    def get_keyring():
-        return types.SimpleNamespace(name=backend_name)
-
-    keyring_module.get_password = get_password
-    keyring_module.set_password = set_password
-    keyring_module.get_keyring = get_keyring
-    monkeypatch.setitem(sys.modules, "keyring", keyring_module)
-    return calls
-
-
-def test_vault_keyring_client_uses_cli_overrides(monkeypatch, stdio_buffers):
-    """CLI values should take precedence over ansible.cfg defaults."""
-    install_fake_ansible_modules(
-        monkeypatch, username="config-user", keyname="config-key"
+def _import_vault_keyring_client():
+    """Import vault-keyring-client.py as a module (handles hyphen in filename)."""
+    spec = importlib.util.spec_from_file_location(
+        "vault_keyring_client_behav",
+        os.path.join(SCRIPT_DIR, "vault-keyring-client.py"),
     )
-    calls = install_fake_keyring(monkeypatch, secret="override-secret")
-    module = load_module("vault_keyring_client_overrides", "vault-keyring-client.py")
-    monkeypatch.setattr(
-        sys,
-        "argv",
-        [
-            "vault-keyring-client.py",
-            "--vault-id",
-            "cli-key",
-            "--username",
-            "cli-user",
-        ],
-    )
-
-    with pytest.raises(SystemExit) as exc:
-        module.main()
-
-    stdout, stderr = stdio_buffers
-    assert exc.value.code == 0
-    assert stdout.getvalue() == "override-secret\n"
-    assert stderr.getvalue() == ""
-    assert calls["get"] == [("cli-key", "cli-user")]
+    module = importlib.util.module_from_spec(spec)
+    with patch.dict("sys.modules", {"keyring": MagicMock()}):
+        spec.loader.exec_module(module)
+    return module
 
 
-def test_vault_keyring_client_returns_rc_2_when_secret_is_missing(
-    monkeypatch, stdio_buffers
-):
-    """Missing keyring entries should exit with the documented return code."""
-    install_fake_ansible_modules(monkeypatch)
-    install_fake_keyring(monkeypatch, secret=None, backend_name="ci-backend")
-    module = load_module("vault_keyring_client_missing", "vault-keyring-client.py")
-    monkeypatch.setattr(
-        sys, "argv", ["vault-keyring-client.py", "--vault-id", "missing-key"]
-    )
+class TestVaultKeyringClientMain:
+    """Behavioral tests for vault-keyring-client.py main()."""
 
-    with pytest.raises(SystemExit) as exc:
-        module.main()
+    def test_uses_cli_overrides(self, capsys, monkeypatch):
+        """CLI --vault-id and --username take precedence over ansible.cfg."""
+        mod = _import_vault_keyring_client()
+        mock_keyring = MagicMock()
+        mock_keyring.get_password.return_value = "override-secret"
+        monkeypatch.setattr(mod, "keyring", mock_keyring)
+        monkeypatch.setattr(
+            mod, "_get_vault_config", lambda: ("config-user", "config-key")
+        )
+        monkeypatch.setattr(
+            sys,
+            "argv",
+            ["vault-keyring-client.py", "--vault-id", "cli-key", "--username", "cli-user"],
+        )
 
-    stdout, stderr = stdio_buffers
-    assert exc.value.code == module.KEYNAME_UNKNOWN_RC
-    assert stdout.getvalue() == ""
-    assert 'key="missing-key"' in stderr.getvalue()
-    assert 'backend="ci-backend"' in stderr.getvalue()
+        with pytest.raises(SystemExit) as exc:
+            mod.main()
 
+        out, err = capsys.readouterr()
+        assert exc.value.code == 0
+        assert out == "override-secret\n"
+        assert err == ""
+        mock_keyring.get_password.assert_called_once_with("cli-key", "cli-user")
 
-def test_vault_keyring_client_set_stores_password(monkeypatch, stdio_buffers):
-    """Set mode should write the confirmed password to the selected key."""
-    install_fake_ansible_modules(monkeypatch)
-    calls = install_fake_keyring(monkeypatch)
-    module = load_module("vault_keyring_client_set", "vault-keyring-client.py")
-    prompts = iter(["new-client-secret", "new-client-secret"])
-    monkeypatch.setattr(getpass, "getpass", lambda prompt="": next(prompts))
-    monkeypatch.setattr(
-        sys,
-        "argv",
-        [
-            "vault-keyring-client.py",
-            "--vault-id",
-            "project-secret",
-            "--username",
-            "override-user",
-            "--set",
-        ],
-    )
+    def test_returns_rc_2_when_secret_is_missing(self, capsys, monkeypatch):
+        """Missing keyring entry exits with KEYNAME_UNKNOWN_RC (2)."""
+        mod = _import_vault_keyring_client()
+        mock_keyring = MagicMock()
+        mock_keyring.get_password.return_value = None
+        mock_keyring.get_keyring.return_value = MagicMock(name="ci-backend")
+        mock_keyring.get_keyring.return_value.name = "ci-backend"
+        monkeypatch.setattr(mod, "keyring", mock_keyring)
+        monkeypatch.setattr(
+            mod, "_get_vault_config", lambda: ("test_user", "ansible_key_test")
+        )
+        monkeypatch.setattr(
+            sys, "argv", ["vault-keyring-client.py", "--vault-id", "missing-key"]
+        )
 
-    with pytest.raises(SystemExit) as exc:
-        module.main()
+        with pytest.raises(SystemExit) as exc:
+            mod.main()
 
-    stdout, stderr = stdio_buffers
-    assert exc.value.code == 0
-    assert "Storing password" in stdout.getvalue()
-    assert stderr.getvalue() == ""
-    assert calls["set"] == [("project-secret", "override-user", "new-client-secret")]
+        out, err = capsys.readouterr()
+        assert exc.value.code == mod.KEYNAME_UNKNOWN_RC
+        assert out == ""
+        assert 'key="missing-key"' in err
+        assert 'backend="ci-backend"' in err
+
+    def test_set_stores_password(self, capsys, monkeypatch):
+        """Set mode writes the confirmed password to the keyring."""
+        mod = _import_vault_keyring_client()
+        mock_keyring = MagicMock()
+        monkeypatch.setattr(mod, "keyring", mock_keyring)
+        monkeypatch.setattr(
+            mod, "_get_vault_config", lambda: ("test_user", "ansible_key_test")
+        )
+        prompts = iter(["new-client-secret", "new-client-secret"])
+        monkeypatch.setattr(getpass, "getpass", lambda prompt="": next(prompts))
+        monkeypatch.setattr(
+            sys,
+            "argv",
+            [
+                "vault-keyring-client.py",
+                "--vault-id", "project-secret",
+                "--username", "override-user",
+                "--set",
+            ],
+        )
+
+        with pytest.raises(SystemExit) as exc:
+            mod.main()
+
+        out, err = capsys.readouterr()
+        assert exc.value.code == 0
+        assert "Storing password" in out
+        assert err == ""
+        mock_keyring.set_password.assert_called_once_with(
+            "project-secret", "override-user", "new-client-secret"
+        )
+
+    def test_set_rejects_mismatched_confirmation(self, capsys, monkeypatch):
+        """Set mode fails fast when confirmation does not match."""
+        mod = _import_vault_keyring_client()
+        mock_keyring = MagicMock()
+        monkeypatch.setattr(mod, "keyring", mock_keyring)
+        monkeypatch.setattr(
+            mod, "_get_vault_config", lambda: ("test_user", "ansible_key_test")
+        )
+        prompts = iter(["first-secret", "second-secret"])
+        monkeypatch.setattr(getpass, "getpass", lambda prompt="": next(prompts))
+        monkeypatch.setattr(
+            sys,
+            "argv",
+            ["vault-keyring-client.py", "--vault-id", "some-key", "--set"],
+        )
+
+        with pytest.raises(SystemExit) as exc:
+            mod.main()
+
+        out, err = capsys.readouterr()
+        assert exc.value.code == 1
+        assert "Storing password" in out
+        assert "Passwords do not match" in err
+        mock_keyring.set_password.assert_not_called()
