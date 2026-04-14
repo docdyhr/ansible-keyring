@@ -39,7 +39,13 @@ class TestVaultKeyringClientMain:
         monkeypatch.setattr(
             sys,
             "argv",
-            ["vault-keyring-client.py", "--vault-id", "cli-key", "--username", "cli-user"],
+            [
+                "vault-keyring-client.py",
+                "--vault-id",
+                "cli-key",
+                "--username",
+                "cli-user",
+            ],
         )
 
         with pytest.raises(SystemExit) as exc:
@@ -90,8 +96,10 @@ class TestVaultKeyringClientMain:
             "argv",
             [
                 "vault-keyring-client.py",
-                "--vault-id", "project-secret",
-                "--username", "override-user",
+                "--vault-id",
+                "project-secret",
+                "--username",
+                "override-user",
                 "--set",
             ],
         )

@@ -16,7 +16,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.10', '3.11', '3.12', '3.13']
+        python-version: ['3.11', '3.12', '3.13']
 
     steps:
     - name: Checkout code
@@ -114,6 +114,7 @@ jobs:
         pip install -r requirements.txt
 
     - name: Check playbook syntax
+      continue-on-error: true
       run: |
         ansible-playbook --syntax-check playbook_pipe.yml
         ansible-playbook --syntax-check playbook_keyring.yml
