@@ -28,5 +28,5 @@ if PASSWD is None:
     sys.exit(1)
 
 print(
-    PASSWD
-)  # lgtm[py/clear-text-logging-sensitive-data] - intentional: script purpose is to emit the password to stdout for Ansible
+    PASSWD  # lgtm[py/clear-text-logging-sensitive-data] - intentional: script purpose is to emit the password to stdout for Ansible
+)

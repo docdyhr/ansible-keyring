@@ -166,8 +166,9 @@ def main():
 
         # print('secret: %s' % secret)
         sys.stdout.write(
-            "%s\n" % secret
-        )  # lgtm[py/clear-text-logging-sensitive-data] - intentional: script purpose is to emit the vault password to stdout for Ansible
+            "%s\n"
+            % secret  # lgtm[py/clear-text-logging-sensitive-data] - intentional: script purpose is to emit the vault password to stdout for Ansible
+        )
 
     sys.exit(0)
 
