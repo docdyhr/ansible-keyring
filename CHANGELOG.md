@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+- Replace deprecated `lgtm[]` CodeQL suppression annotations with `codeql[]` format in `get_pass.py` and `vault-keyring-client.py`
+- Drop Python 3.11 from CI matrix — `ansible>=13.6.0` requires Python ≥3.12; add Python 3.14
+
 ### Changed
 - Migrated virtual environment from Homebrew Python 3.14.3 to pyenv Python 3.14.4
 - Bumped dependency version floors to match current installed versions:
